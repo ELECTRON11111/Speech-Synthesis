@@ -4,13 +4,14 @@ const voicesDropdown = document.querySelector('[name="voice"]');
 const options = document.querySelectorAll('[type="range"], [name="text"]');
 const speakButton = document.querySelector('#speak');
 const stopButton = document.querySelector('#stop');
+const rangeElems = [...document.querySelectorAll('[type = "range"]')];
 
 msg.text = document.querySelector('[name = "text"]').value;
 
 console.log(msg.text);
 
 function populateVoices(){
-    voices = this.getVoices().slice(0,5);
+    voices = this.getVoices().slice(0,10);
     console.log(voices);
 
     const voiceOptions = voices
@@ -21,22 +22,44 @@ function populateVoices(){
     
 }
 
-function speakUp(){
-    // speechSynthesis.paused = false;
-    console.log(msg);
-    speechSynthesis.speak(msg);
-    console.log(speechSynthesis);
-}
-
-
 function setVoice() {
-    console.log(`Changing voices`, this.children[0].value, msg.voice);
     // The msg's voice would be a speechSynthesisVoice object
     msg.voice = voices.find(voice => voice.name === this.value);
-    console.log(msg.voice);
+    // When voice is changed we cancel the current speech and speak with the new voice
+    toggle();
+}
+
+function toggle(startOver = true){
+    speechSynthesis.cancel();
+    if (startOver){
+        speechSynthesis.speak(msg);
+    }
+}
+
+function pauseSpeech() {
+    speechSynthesis.pause();
+}
+
+function changeRange() {
+    console.log(this);
+    msg[this.name] = document.querySelector(`[name = ${this.name}]`).value;
+    toggle();
+}
+
+function setText(){
+    console.log(this);
+    msg.text = this.value;
+    toggle();
 }
 
 speechSynthesis.addEventListener('voiceschanged', populateVoices);
 voicesDropdown.addEventListener('change',setVoice);
-speakButton.addEventListener('click', speakUp);
-stopButton.addEventListener('click', speechSynthesis.pause());
+speakButton.addEventListener('click', toggle);
+stopButton.addEventListener('click', pauseSpeech);
+
+// For rate and pitch
+rangeElems.forEach(range => {
+    range.addEventListener('change', changeRange);
+});
+
+options[2].addEventListener('change', setText);
